@@ -1,0 +1,8 @@
+Program to change a Google calendar export to csv format to be used in spreadsheets.
+
+It probably wount work for all events, I only tested for my own events.
+
+One ommission from the Google calendar export was the colour.  This has caused all kinds of trouble as my events were colour coded.
+
+As of writing was in a working state but with errors
+In future should have more functions to organise dates and finances
