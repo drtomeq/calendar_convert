@@ -10,3 +10,4 @@ In future should have more functions to organise dates and finances
 
 Update 21 Aug 2023
 Fixed issue of being 1 hour out due to daylight saving time
+Added comments and did some tidying up

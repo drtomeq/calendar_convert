@@ -21,9 +21,6 @@ mytz = ZoneInfo("Europe/London")
 # make a global version here so can get suggestions 
 init_dt = datetime.datetime(1,1,1, tzinfo=mytz)
 print(init_dt)
-# my_dt = datetime.datetime(1,1,1, tzinfo=datetime.timezone.utc)
-# tzdt = datetime.datetime(2023,1,19, tzinfo=ZoneInfo("Europe/London"))
-
 
 # the calendar file as exported from Google calendar
 # change to the appropriate file name
@@ -36,9 +33,6 @@ output_file = open("calendar2023Aug.csv", "w")
 
 # each event in the calendar, a global variable
 events = []
-
-# while there are other categories, these are the ones we are intersted in
-# categories = ["name","start","end","stop repeat","exclusions"]
 
 def find_number_start(line):
     '''Find the first character that is a number
@@ -54,15 +48,7 @@ def DSTadjust(dt: datetime):
     
     this was a longer function, but it was uneccesary 
     as time zones can correct for seasonal changes'''
-
-    '''
-    print("before", dt)
-    tzdt = dt.replace(tzinfo=ZoneInfo("Europe/London"))
-    tzdt = tzdt.replace(hour=((tzdt.hour + (tzdt.dst()).seconds//3600))%24)
-    tzdt = dt.replace(tzinfo=datetime.timezone.utc)
-    '''
     tzdt = dt.astimezone(mytz)
-    # print("after", tzdt)
     return tzdt
 
 def read_date_time(line):
@@ -92,7 +78,6 @@ def read_date_time(line):
         return
     
     date_time={}
-
     global init_dt
     my_dt = init_dt
 
@@ -111,12 +96,11 @@ def read_date_time(line):
             my_dt = my_dt.replace(minute=int(line[start_pos+11:start_pos+13]))
 
     except(ValueError):
-        print("************* Exception: not a datetime number! ******************")
+        print("*********** Exception: not a formated datetime number! ****************")
         print(line)
         datetime = {}
 
     my_dt = DSTadjust(my_dt)
-
     return my_dt
 
 def get_freq(line):
@@ -144,7 +128,7 @@ def get_freq(line):
     return 
 
 def get_one_data():
-    """read one item from the calendar
+    """read one event from the calendar
 
     Can't indetify item by position as it is inconsistant
     so we look for an identifier
@@ -206,9 +190,8 @@ def repeated_events():
     We can check if repeated as it should have a stop_repeat item 
     """
 
-    # initially I just added to the event list
-    # but it resulted in multiple copies
-    # so make a separate list
+    # make a separate repeated event list and extend events 
+    # adding directly to events can make multiple copies
     extra_events = []
 
     global init_dt
@@ -216,7 +199,7 @@ def repeated_events():
     global events
     for event in events:
         # all repeated events should have a stop repeat
-        # if it didn't, it should have been assigned now earlier
+        # if it didn't, it should have been assigned earlier
         try: 
         # we do equality to raise exception if stop repeat does not exists
             event["stop repeat"] = event["stop repeat"]
@@ -242,6 +225,7 @@ def repeated_events():
             new_event["start"] = new_event["start"] + delta 
             new_event["end"] = new_event["end"] + delta
 
+            # use timestamp as you can't compare naive and aware times
             if (new_event["end"]).timestamp() > stop_dt.timestamp():
                 break
             if new_event["start"] in new_event["exclusions"]:
@@ -250,8 +234,9 @@ def repeated_events():
                 extra_events.append(new_event.copy())
     events.extend(extra_events)
 
-# replace commas with slash to work in csv format
 def replace_commas(in_str:str)->str:
+    """ replace commas with slash to work in csv format
+    """
     if "," not in in_str:
         return in_str
     out_str=""
@@ -260,8 +245,16 @@ def replace_commas(in_str:str)->str:
             in_str = in_str.replace(character, "/") 
     return in_str
 
-
 def write_calendar():
+    """ write details to a file
+
+    This will be 
+        * the event name/ client
+        * the datetime the event starts
+        * the length of the event
+    Perhaps modify to have more information
+    Or separate date time into date and time
+    """
     output_file.write("name,start,length\n")
     global events
     for event in events:
@@ -273,14 +266,14 @@ def write_calendar():
             else:
                 print("********** wrong name type ********************")
         else:
-            print("*************** event is not a dict *****************")
+            print("*********** event is not a dict *************")
             print(event)
             continue
         output_file.write(str(event["start"]) + ",")
         output_file.write(str(event["end"]-event["start"]) + ",")
         output_file.write("\n")
 
-def write_unformated():
+def write_to_screen():
     global events
     for event in events:
         for item in event:
@@ -295,7 +288,5 @@ def print_events():
 
 read_calendar()
 repeated_events()
-# write_unformated()
 write_calendar()
 
-# print(events)
